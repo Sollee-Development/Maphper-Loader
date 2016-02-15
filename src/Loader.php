@@ -48,7 +48,8 @@ class Loader {
         $maphperSettings = $this->config[$settings['to']];
         $datasource = $this->getDatabaseDataSource($maphperSettings['table'], $maphperSettings['primaryKey']);
         $maphper = new \Maphper\Maphper($datasource);
-        $relation = new ('\\Maphper\\Relation\\' . ucwords($settings['type']))($maphper, $settings['localKey'], $settings['foreignKey']);
+        $relation_class = '\\Maphper\\Relation\\' . ucwords($settings['type']);
+        $relation = new $relation_class($maphper, $settings['localKey'], $settings['foreignKey']);
         return $relation;
     }
 }
