@@ -30,7 +30,9 @@ class Loader {
 
         if (!isset($datasource)) throw new \Exception("There is no Datasource for '$name'");
 
-        $maphper = new \Maphper\Maphper($datasource);
+        if (!isset($maphperSettings['settings'])) $maphperSettings['settings'] = [];
+
+        $maphper = new \Maphper\Maphper($datasource, $maphperSettings['settings']);
         if (isset($maphperSettings['relations'])) foreach ($maphperSettings['relations'] as $relation) {
             $relation = $this->getRelation($relation);
             $maphper->addRelation($relation['name'], $relation);
