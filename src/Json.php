@@ -6,11 +6,23 @@ class Json {
     private $dice;
 
     public function __construct($json, \Dice\Dice $dice) {
-        if (trim($json)[0] != '{') $json = file_get_contents($json);
-        
-        $config = json_decode($json, true);
+        if (is_array($json)) {
+            $config = [];
+            foreach ($json as $file) {
+                $fileJson = file_get_contents($json);
+                $fileConfig = json_decode($fileJson, true);
+        		if (!is_array($fileConfig)) throw new \Exception('Could not decode json: ' . json_last_error_msg());
 
-		if (!is_array($config)) throw new \Exception('Could not decode json: ' . json_last_error_msg());
+                $config = array_merge_recursive($config, $fileConfig);
+            }
+        }
+        else {
+            if (trim($json)[0] != '{') $json = file_get_contents($json);
+
+            $config = json_decode($json, true);
+
+    		if (!is_array($config)) throw new \Exception('Could not decode json: ' . json_last_error_msg());
+        }
 
         $this->config = $config;
         $this->dice = $dice;
@@ -38,6 +50,10 @@ class Json {
             //$mapper['shared'] = true;
             $mapper['call'] = [];
 			foreach ($rules as $name => $rule) $mapper['call'][] = ['addRelation', [$name, ['instance' => $rule]]];
+            // If `resultCLass` option is set then automatically use Dice to resolve dependencies
+            if (isset($sourceConfig['resultClass'])) $mapper['constructParams'] = [['resultClass' => function () use ($sourceConfig) {
+                return $this->dice->create($sourceConfig['resultClass']);
+            }]];
 			$this->dice->addRule('$Maphper_' . $maphperName, $mapper);
         }
     }
