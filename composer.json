@@ -2,5 +2,9 @@
     "name" : "solleer/maphper-loader",
     "autoload": {
         "classmap": ["src/"]
+    },
+    "require" : {
+        "level-2/maphper" : "dev-master",
+        "level-2/dice" : "dev-master"
     }
 }
