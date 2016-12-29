@@ -1,0 +1,6 @@
+{
+    "name" : "solleer/maphper-loader",
+    "autoload": {
+        "classmap": ["src/"]
+    }
+}

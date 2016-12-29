@@ -9,7 +9,7 @@ class Json {
         if (is_array($json)) {
             $config = [];
             foreach ($json as $file) {
-                $fileJson = file_get_contents($json);
+                $fileJson = file_get_contents($file);
                 $fileConfig = json_decode($fileJson, true);
         		if (!is_array($fileConfig)) throw new \Exception('Could not decode json: ' . json_last_error_msg());
 
@@ -25,6 +25,7 @@ class Json {
         }
 
         $this->config = $config;
+        var_dump($config);
         $this->dice = $dice;
         $this->addLoader('database', new DataSource\DataBase);
     }
