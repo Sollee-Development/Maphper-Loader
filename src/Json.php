@@ -25,7 +25,6 @@ class Json {
         }
 
         $this->config = $config;
-        var_dump($config);
         $this->dice = $dice;
         $this->addLoader('database', new DataSource\DataBase);
     }
@@ -76,7 +75,7 @@ class Json {
             $to = $this->dice->create('$Maphper_' . $relation['to']);
             $maphperRelation = new \Maphper\Relation\ManyMany($intermediateMaphper, $to, $relation['foreignKey'], $relation['intermediateKey'], isset($relation['intermediateField']) ? $relation['intermediateKey'] : null);
             $maphper->addRelation($relation['name'], $maphperRelation);
-            $otherRelation = $maphperSettings['relations'][array_search($relation['name'], array_column($maphperSettings['relations'], 'name'))];
+            $otherRelation = $maphperSettings['relations'][array_search($name, array_column($maphperSettings['relations'], 'to'))];
             $to->addRelation($otherRelation['name'], new \Maphper\Relation\ManyMany($intermediateMaphper, $maphper, $config['primaryKey'],
                 $otherRelation['intermediateKey'], isset($otherRelation['intermediateField']) ? $otherRelation['intermediateKey'] : null));
         }
