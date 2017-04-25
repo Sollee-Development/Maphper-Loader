@@ -38,8 +38,16 @@ class Json {
         $this->dice->addRule('$Maphper_Source_' . $name, $datasource->load($config));
         $mapper = [
             'instanceOf' => 'Maphper\\Maphper',
-            'substitutions' => ['Maphper\\DataSource' => ['instance' => '$Maphper_Source_' . $name]]
+            'substitutions' => ['Maphper\\DataSource' => ['instance' => '$Maphper_Source_' . $name]],
+            'shared' => true,
+            'call' => []
         ];
+        if (isset($config['relations'])) foreach ($config['relations'] as $relation) {
+            $relationRuleName = '$Maphper_Relation' . $name . '_' . $relation['name'];
+            $this->addRelation($relationRuleName, $relation);
+            $mapper['call'][] = ['addRelation', [$relation['name'], ['instance' => $relationRuleName]]];
+        }
+
         // If `resultCLass` option is set then automatically use Dice to resolve dependencies
         if (isset($config['resultClass'])) $mapper['constructParams'] = [['resultClass' => function () use ($config) {
             return $this->dice->create($config['resultClass']);
@@ -47,40 +55,29 @@ class Json {
         $this->dice->addRule('$Maphper_' . $name, $mapper);
     }
 
-    public function getMaphper($name) {
-        $maphper = $this->dice->create('$Maphper_' . $name);
-        $this->addRelations($maphper, $name);
-		return $maphper;
-	}
-
-    private function addRelations(&$maphper, $name, $recursive = true, $toMaphper = null) {
-        $config = $this->config[$name];
-        if (isset($config['relations'])) foreach ($config['relations'] as $relation) {
-            if ($relation['type'] === "ManyMany") $this->addManyMany($maphper, $name, $config, $relation);
-            else $this->addOneOrManyRelation($maphper, $name, $config, $relation, $recursive, $toMaphper);
+    private function addRelation($relationRuleName, $relation) {
+        if ($relation['type'] === "ManyMany") {
+            $this->dice->addRule($relationRuleName, [
+                'instanceOf' => 'Maphper\Relation\ManyMany',
+                'constructParams' => [
+                    ['instance' => '$Maphper_' . $relation['intermediate']],
+                    ['instance' => '$Maphper_' . $relation['to']],
+                    $relation['foreignKey'], $relation['intermediateKey'], $relation['intermediateField'] ?? null
+                ]
+            ]);
         }
-        return $maphper;
+        else {
+            $this->dice->addRule($relationRuleName, [
+                'instanceOf' => 'Maphper\Relation\\' . ucwords($relation['type']),
+                'constructParams' => [
+                    ['instance' => '$Maphper_' . $relation['to']],
+                    $relation['localKey'], $relation['foreignKey']
+                ]
+            ]);
+        }
     }
 
-    private function addManyMany(&$maphper, $name, $config, $relation) {
-        $intermediateMaphper = $this->dice->create('$Maphper_' . $relation['intermediate']);
-
-        $maphperSettings = $this->config[$relation['to']];
-        $to = $this->dice->create('$Maphper_' . $relation['to']);
-        $maphperRelation = new \Maphper\Relation\ManyMany($intermediateMaphper, $to, $relation['foreignKey'], $relation['intermediateKey'], isset($relation['intermediateField']) ? $relation['intermediateKey'] : null);
-        $maphper->addRelation($relation['name'], $maphperRelation);
-        $otherRelation = $maphperSettings['relations'][array_search($name, array_column($maphperSettings['relations'], 'to'))];
-        $to->addRelation($otherRelation['name'], new \Maphper\Relation\ManyMany($intermediateMaphper, $maphper, $config['primaryKey'],
-            $otherRelation['intermediateKey'], isset($otherRelation['intermediateField']) ? $otherRelation['intermediateKey'] : null));
-    }
-
-    private function addOneOrManyRelation(&$maphper, $name, $config, $relation, $recursive = true, $toMaphper = null) {
-        $relationType = 'Maphper\\Relation\\' . ucwords($relation['type']);
-        $maphperSettings = $this->config[$relation['to']];
-        $to = $toMaphper ?? $this->dice->create('$Maphper_' . $relation['to']);
-        $maphperRelation = new $relationType($to, $relation['localKey'], $relation['foreignKey']);
-        $maphper->addRelation($relation['name'], $maphperRelation);
-
-        if ($recursive) $this->addRelations($to, $relation['to'], false, $maphper);
-    }
+    public function getMaphper($name) {
+		return $this->dice->create('$Maphper_' . $name);
+	}
 }
