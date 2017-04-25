@@ -1,0 +1,7 @@
+{
+    "blog" : {
+        "type" : "database",
+        "table" : "blog",
+        "primaryKey" : "id"
+    }
+}

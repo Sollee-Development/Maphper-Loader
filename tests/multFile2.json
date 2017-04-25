@@ -1,0 +1,16 @@
+{
+    "author" : {
+        "type" : "database",
+        "table" : "author",
+        "primaryKey" : "id",
+        "relations" : [
+            {
+                "name" : "blogs",
+                "to" : "blog",
+                "type" : "many",
+                "localKey" : "id",
+                "foreignKey" : "authorId"
+            }
+        ]
+    }
+}

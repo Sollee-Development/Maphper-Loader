@@ -1,0 +1,7 @@
+{
+    "test" : {
+        "type" : "database",
+        "table" : "test",
+        "primaryKey" : "id"
+    }
+}

@@ -8,25 +8,20 @@ class Json {
     public function __construct($json, \Dice\Dice $dice) {
         if (is_array($json)) {
             $config = [];
-            foreach ($json as $file) {
-                $fileJson = file_get_contents($file);
-                $fileConfig = json_decode($fileJson, true);
-        		if (!is_array($fileConfig)) throw new \Exception('Could not decode json: ' . json_last_error_msg());
-
-                $config = array_merge_recursive($config, $fileConfig);
-            }
+            foreach ($json as $file) $config = array_merge_recursive($config, $this->decodeJson($file));
         }
-        else {
-            if (trim($json)[0] != '{') $json = file_get_contents($json);
-
-            $config = json_decode($json, true);
-
-    		if (!is_array($config)) throw new \Exception('Could not decode json: ' . json_last_error_msg());
-        }
+        else $config = $this->decodeJson($json);
 
         $this->config = $config;
         $this->dice = $dice;
         $this->addLoader('database', new DataSource\DataBase);
+    }
+
+    private function decodeJson($json) {
+        if (trim($json)[0] != '{') $json = file_get_contents($json);
+        $config = json_decode($json, true);
+		if (!is_array($config)) throw new \Exception('Could not decode json: ' . json_last_error_msg());
+        return $config;
     }
 
     public function addLoader($datasourceType, DataSource $datasource) {

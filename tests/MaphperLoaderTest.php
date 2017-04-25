@@ -219,6 +219,31 @@ class MaphperLoaderTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals($actors, $actualActors);
         $this->assertEquals($movies, $actualMovies);
     }
+
+    public function testBasicConstructFromFile() {
+        $json = __DIR__ . '/basicConfig.json';
+
+        $loader = $this->getLoader($json);
+
+        $actual = $loader->getMaphper('test');
+        $expected = $this->getMaphper('test');
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function testConstructFromMultipleFiles() {
+        $json = [__DIR__ . '/multFile1.json', __DIR__ . '/multFile2.json'];
+
+        $loader = $this->getLoader($json);
+
+        $actual = $loader->getMaphper('author');
+
+        $blogs = $this->getMaphper('blog');
+        $authors = $this->getMaphper('author');
+        $authors->addRelation('blogs', new \Maphper\Relation\Many($blogs, 'id', 'authorId'));
+
+        $this->assertEquals($authors, $actual);
+    }
 }
 
 class MockDataBase implements \MaphperLoader\DataSource {
