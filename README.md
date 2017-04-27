@@ -39,7 +39,7 @@ MaphperLoader uses dice to handle dependencies such as PDO. You just need to add
 ## Relations
 MaphperLoader supports all Maphper relationships including: One, Many, and ManyMany
 
-# One
+### One
 Here is some sample JSON for a One Relationship
 ```json
 {
@@ -71,7 +71,7 @@ A one relationship has the following properties
 * `localKey` - the key in the current Maphper being linked from
 * `foreignKey` - the key in the other Maphper being linker to
 
-# Many
+### Many
 ```json
 {
     "blog" : {
@@ -97,7 +97,7 @@ A one relationship has the following properties
 ```
 A many relation has the same properties of a One relation except the `type` is set to `many`
 
-# ManyMany
+### ManyMany
 ```json
 {
     "actors" : {
