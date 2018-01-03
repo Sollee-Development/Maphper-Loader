@@ -1,26 +1,27 @@
 <?php
 
-class MaphperLoaderTest extends PHPUnit_Framework_TestCase {
+class JsonMockLoaderTest extends PHPUnit\Framework\TestCase {
     private $dice;
     private $pdo;
 
-    public function __construct() {
+    public function setUp() {
         $this->dice = new \Dice\Dice();
         $this->pdo = $this->createMock('PDO');
         $this->pdo->method('getAttribute')->willReturn('mysql');
     }
 
-    protected function getDataSource($name, $primaryKey = 'id', array $options = []) {
-		return new \Maphper\DataSource\Database($this->pdo, $name, $primaryKey, $options);
+    protected function getDataSource(\ArrayObject $obj, $primaryKey = 'id') {
+		return new \Maphper\DataSource\Mock($obj, $primaryKey);
 	}
 
-    private function getMaphper($name, $primaryKey = 'id', array $options = []) {
-        return new \Maphper\Maphper($this->getDataSource($name, $primaryKey, $options));
+    private function getMaphper(\ArrayObject $obj = null, $primaryKey = 'id') {
+        $obj = $obj ?? new \ArrayObject();
+        return new \Maphper\Maphper($this->getDataSource($obj, $primaryKey));
     }
 
     private function getLoader($json) {
         $loader = new MaphperLoader\Json($json, $this->dice);
-        $loader->addLoader('database', new MockDataBase($this->pdo));
+        //$loader->addLoader('database', new MockDataBase($this->pdo));
         return $loader;
     }
 
@@ -28,8 +29,7 @@ class MaphperLoaderTest extends PHPUnit_Framework_TestCase {
         $json = '
 {
     "test" : {
-        "type" : "database",
-        "table" : "test",
+        "type" : "mock",
         "primaryKey" : "id"
     }
 }
@@ -38,17 +38,54 @@ class MaphperLoaderTest extends PHPUnit_Framework_TestCase {
         $loader = $this->getLoader($json);
 
         $actual = $loader->getMaphper('test');
-        $expected = $this->getMaphper('test');
+        $expected = $this->getMaphper();
 
         $this->assertEquals($expected, $actual);
+    }
+
+    public function testBasicConstructWithData() {
+        $json = '
+{
+    "test" : {
+        "type" : "mock",
+        "primaryKey" : "id",
+        "data" : [
+            {
+                "id" : "1",
+                "title" : "test1"
+            },
+            {
+                "id" : "2",
+                "title" : "test2"
+            }
+        ]
+    }
+}
+        ';
+
+        $loader = $this->getLoader($json);
+
+        $actual = $loader->getMaphper('test');
+        $expected = $this->getMaphper(new \ArrayObject([
+            (object)[
+                "id" => "1",
+                "title" => "test1"
+            ],
+            (object)[
+                "id" => "2",
+                "title" => "test2"
+            ]
+        ]));
+
+        $this->assertEquals($expected[1], $actual[1]);
+        $this->assertEquals($expected[2], $actual[2]);
     }
 
     public function testConstructRelationOne() {
         $json = '
 {
     "blog" : {
-        "type" : "database",
-        "table" : "blog",
+        "type" : "mock",
         "primaryKey" : "id",
         "relations" : [
             {
@@ -61,8 +98,7 @@ class MaphperLoaderTest extends PHPUnit_Framework_TestCase {
         ]
     },
     "author" : {
-        "type" : "database",
-        "table" : "author",
+        "type" : "mock",
         "primaryKey" : "id"
     }
 }
@@ -72,8 +108,8 @@ class MaphperLoaderTest extends PHPUnit_Framework_TestCase {
 
         $actual = $loader->getMaphper('blog');
 
-        $blogs = $this->getMaphper('blog');
-        $authors = $this->getMaphper('author');
+        $blogs = $this->getMaphper();
+        $authors = $this->getMaphper();
         $blogs->addRelation('author', new \Maphper\Relation\One($authors, 'authorId', 'id'));
 
         $this->assertEquals($blogs, $actual);
@@ -83,13 +119,11 @@ class MaphperLoaderTest extends PHPUnit_Framework_TestCase {
         $json = '
 {
     "blog" : {
-        "type" : "database",
-        "table" : "blog",
+        "type" : "mock",
         "primaryKey" : "id"
     },
     "author" : {
-        "type" : "database",
-        "table" : "author",
+        "type" : "mock",
         "primaryKey" : "id",
         "relations" : [
             {
@@ -108,8 +142,8 @@ class MaphperLoaderTest extends PHPUnit_Framework_TestCase {
 
         $actual = $loader->getMaphper('author');
 
-        $blogs = $this->getMaphper('blog');
-        $authors = $this->getMaphper('author');
+        $blogs = $this->getMaphper();
+        $authors = $this->getMaphper();
         $authors->addRelation('blogs', new \Maphper\Relation\Many($blogs, 'id', 'authorId'));
 
         $this->assertEquals($authors, $actual);
@@ -119,8 +153,7 @@ class MaphperLoaderTest extends PHPUnit_Framework_TestCase {
         $json = '
 {
     "blog" : {
-        "type" : "database",
-        "table" : "blog",
+        "type" : "mock",
         "primaryKey" : "id",
         "relations" : [
             {
@@ -133,8 +166,7 @@ class MaphperLoaderTest extends PHPUnit_Framework_TestCase {
         ]
     },
     "author" : {
-        "type" : "database",
-        "table" : "author",
+        "type" : "mock",
         "primaryKey" : "id",
         "relations" : [
             {
@@ -154,8 +186,8 @@ class MaphperLoaderTest extends PHPUnit_Framework_TestCase {
         $actualAuthors = $loader->getMaphper('author');
         $actualBlogs = $loader->getMaphper('blog');
 
-        $blogs = $this->getMaphper('blog');
-        $authors = $this->getMaphper('author');
+        $blogs = $this->getMaphper();
+        $authors = $this->getMaphper();
         $blogs->addRelation('author', new \Maphper\Relation\One($authors, 'authorId', 'id'));
         $authors->addRelation('blogs', new \Maphper\Relation\Many($blogs, 'id', 'authorId'));
 
@@ -167,8 +199,7 @@ class MaphperLoaderTest extends PHPUnit_Framework_TestCase {
         $json = '
 {
     "actors" : {
-        "type" : "database",
-        "table" : "actor",
+        "type" : "mock",
         "primaryKey" : "aid",
         "relations" : [
             {
@@ -182,8 +213,7 @@ class MaphperLoaderTest extends PHPUnit_Framework_TestCase {
         ]
     },
     "movies" : {
-        "type" : "database",
-        "table" : "movie",
+        "type" : "mock",
         "primaryKey" : "mid",
         "relations" : [
             {
@@ -197,8 +227,7 @@ class MaphperLoaderTest extends PHPUnit_Framework_TestCase {
         ]
     },
     "cast" : {
-        "type" : "database",
-        "table" : "cast",
+        "type" : "mock",
         "primaryKey" : ["movieId", "actorId"]
     }
 }
@@ -210,57 +239,13 @@ class MaphperLoaderTest extends PHPUnit_Framework_TestCase {
         $actualMovies = $loader->getMaphper('movies');
 
         // Set up expected
-        $actors = $this->getMaphper('actor', 'aid');
-        $movies = $this->getMaphper('movie', 'mid');
-        $cast = $this->getMaphper('cast', ['movieId', 'actorId']);
+        $actors = $this->getMaphper(new \ArrayObject(), 'aid');
+        $movies = $this->getMaphper(new \ArrayObject(), 'mid');
+        $cast = $this->getMaphper(new \ArrayObject(), ['movieId', 'actorId']);
 		$actors->addRelation('movies', new \Maphper\Relation\ManyMany($cast, $movies, 'mid', 'movieId'));
 		$movies->addRelation('actors', new \Maphper\Relation\ManyMany($cast, $actors, 'aid', 'actorId'));
 
         $this->assertEquals($actors, $actualActors);
         $this->assertEquals($movies, $actualMovies);
-    }
-
-    public function testBasicConstructFromFile() {
-        $json = __DIR__ . '/basicConfig.json';
-
-        $loader = $this->getLoader($json);
-
-        $actual = $loader->getMaphper('test');
-        $expected = $this->getMaphper('test');
-
-        $this->assertEquals($expected, $actual);
-    }
-
-    public function testConstructFromMultipleFiles() {
-        $json = [__DIR__ . '/multFile1.json', __DIR__ . '/multFile2.json'];
-
-        $loader = $this->getLoader($json);
-
-        $actual = $loader->getMaphper('author');
-
-        $blogs = $this->getMaphper('blog');
-        $authors = $this->getMaphper('author');
-        $authors->addRelation('blogs', new \Maphper\Relation\Many($blogs, 'id', 'authorId'));
-
-        $this->assertEquals($authors, $actual);
-    }
-}
-
-class MockDataBase implements \MaphperLoader\DataSource {
-    private $pdo;
-
-    public function __construct(\PDO $pdo) {
-        $this->pdo = $pdo;
-    }
-
-    public function load(array $config)  {
-        return [
-            'instanceOf' => 'Maphper\\DataSource\\Database',
-            'constructParams' => [
-                $this->pdo,
-                $config['table'],
-                $config['primaryKey']
-            ]
-        ];
     }
 }

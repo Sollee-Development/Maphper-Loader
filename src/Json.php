@@ -15,6 +15,7 @@ class Json {
         $this->config = $config;
         $this->dice = $dice;
         $this->addLoader('database', new DataSource\DataBase);
+        $this->addLoader('mock', new DataSource\Mock);
     }
 
     private function decodeJson($json) {
