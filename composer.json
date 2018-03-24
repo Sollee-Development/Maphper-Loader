@@ -4,7 +4,7 @@
         "classmap": ["src/"]
     },
     "require" : {
-        "level-2/maphper" : "dev-master",
+        "level-2/maphper" : "^0.9",
         "level-2/dice" : "dev-master"
     }
 }
