@@ -6,7 +6,7 @@ class Mock implements \MaphperLoader\DataSource {
         return [
             'instanceOf' => 'Maphper\\DataSource\\Mock',
             'constructParams' => [
-                ['instance' => 'ArrayObject', 'params' => [$data, 0, 'ArrayIterator']],
+                [\Dice\Dice::INSTANCE => 'ArrayObject', 'params' => [$data, 0, 'ArrayIterator']],
                 $config['primaryKey']
             ]
         ];

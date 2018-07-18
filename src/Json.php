@@ -34,14 +34,14 @@ class Json {
         $this->dice->addRule('$Maphper_Source_' . $name, $datasource->load($config));
         $mapper = [
             'instanceOf' => 'Maphper\\Maphper',
-            'substitutions' => ['Maphper\\DataSource' => ['instance' => '$Maphper_Source_' . $name]],
+            'substitutions' => ['Maphper\\DataSource' => [\Dice\Dice::INSTANCE => '$Maphper_Source_' . $name]],
             'shared' => true,
             'call' => []
         ];
         if (isset($config['relations'])) foreach ($config['relations'] as $relation) {
-            $relationRuleName = '$Maphper_Relation' . $name . '_' . $relation['name'];
+            $relationRuleName = '$Maphper_Relation_' . $name . '_' . $relation['name'];
             $this->addRelation($relationRuleName, $relation);
-            $mapper['call'][] = ['addRelation', [$relation['name'], ['instance' => $relationRuleName]]];
+            $mapper['call'][] = ['addRelation', [$relation['name'], [\Dice\Dice::INSTANCE => $relationRuleName]]];
         }
 
         // If `resultCLass` option is set then automatically use Dice to resolve dependencies
@@ -56,8 +56,8 @@ class Json {
             $this->dice->addRule($relationRuleName, [
                 'instanceOf' => 'Maphper\Relation\ManyMany',
                 'constructParams' => [
-                    ['instance' => '$Maphper_' . $relation['intermediate']],
-                    ['instance' => '$Maphper_' . $relation['to']],
+                    [\Dice\Dice::INSTANCE => '$Maphper_' . $relation['intermediate']],
+                    [\Dice\Dice::INSTANCE => '$Maphper_' . $relation['to']],
                     $relation['foreignKey'], $relation['intermediateKey'], $relation['intermediateField'] ?? null
                 ]
             ]);
@@ -66,7 +66,7 @@ class Json {
             $this->dice->addRule($relationRuleName, [
                 'instanceOf' => 'Maphper\Relation\\' . ucwords($relation['type']),
                 'constructParams' => [
-                    ['instance' => '$Maphper_' . $relation['to']],
+                    [\Dice\Dice::INSTANCE => '$Maphper_' . $relation['to']],
                     $relation['localKey'], $relation['foreignKey']
                 ]
             ]);
