@@ -31,7 +31,7 @@ class Json {
     }
 
     private function addMaphper($name, $config, DataSource $datasource) {
-        $this->dice->addRule('$Maphper_Source_' . $name, $datasource->load($config));
+        $this->dice = $this->dice->addRule('$Maphper_Source_' . $name, $datasource->load($config));
         $mapper = [
             'instanceOf' => 'Maphper\\Maphper',
             'substitutions' => ['Maphper\\DataSource' => [\Dice\Dice::INSTANCE => '$Maphper_Source_' . $name]],
@@ -48,12 +48,12 @@ class Json {
         if (isset($config['resultClass'])) $mapper['constructParams'] = [['resultClass' => function () use ($config) {
             return $this->dice->create($config['resultClass']);
         }]];
-        $this->dice->addRule('$Maphper_' . $name, $mapper);
+        $this->dice = $this->dice->addRule('$Maphper_' . $name, $mapper);
     }
 
     private function addRelation($relationRuleName, $relation) {
         if ($relation['type'] === "ManyMany") {
-            $this->dice->addRule($relationRuleName, [
+            $this->dice = $this->dice->addRule($relationRuleName, [
                 'instanceOf' => 'Maphper\Relation\ManyMany',
                 'constructParams' => [
                     [\Dice\Dice::INSTANCE => '$Maphper_' . $relation['intermediate']],
@@ -63,7 +63,7 @@ class Json {
             ]);
         }
         else {
-            $this->dice->addRule($relationRuleName, [
+            $this->dice = $this->dice->addRule($relationRuleName, [
                 'instanceOf' => 'Maphper\Relation\\' . ucwords($relation['type']),
                 'constructParams' => [
                     [\Dice\Dice::INSTANCE => '$Maphper_' . $relation['to']],

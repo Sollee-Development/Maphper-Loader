@@ -5,6 +5,6 @@
     },
     "require" : {
         "level-2/maphper" : "^0.9",
-        "level-2/dice" : "^3.0"
+        "level-2/dice" : "^4.0"
     }
 }
