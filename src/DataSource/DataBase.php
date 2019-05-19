@@ -11,7 +11,7 @@ class DataBase implements \MaphperLoader\DataSource {
         return [
             'instanceOf' => 'Maphper\\DataSource\\Database',
             'constructParams' => [
-                [\Dice\Dice::INSTANCE => 'PDO'],
+                [\Dice\Dice::INSTANCE => $config['PDO'] ?? 'PDO'],
                 $config['table'],
                 $config['primaryKey'],
                 ['editmode' => $this->editMode]
