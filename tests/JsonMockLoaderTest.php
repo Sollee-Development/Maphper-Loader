@@ -81,6 +81,44 @@ class JsonMockLoaderTest extends PHPUnit\Framework\TestCase {
         $this->assertEquals($expected[2], $actual[2]);
     }
 
+    public function testBasicConstructWithObjData() {
+        $json = '
+{
+    "test" : {
+        "type" : "mock",
+        "primaryKey" : "id",
+        "data" : {
+            "2" : {
+                "id" : "1",
+                "title" : "test1"
+            },
+            "5" : {
+                "id" : "2",
+                "title" : "test2"
+            }
+        }
+    }
+}
+        ';
+
+        $loader = $this->getLoader($json);
+
+        $actual = $loader->getMaphper('test');
+        $expected = $this->getMaphper(new \ArrayObject([
+            2 => (object)[
+                "id" => "1",
+                "title" => "test1"
+            ],
+            5 => (object)[
+                "id" => "2",
+                "title" => "test2"
+            ]
+        ]));
+
+        $this->assertEquals($expected[2], $actual[2]);
+        $this->assertEquals($expected[5], $actual[5]);
+    }
+
     public function testConstructRelationOne() {
         $json = '
 {
